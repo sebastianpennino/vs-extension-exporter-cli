@@ -19,11 +19,44 @@ This installs the `vscode-ext` command globally.
 
 ## Usage
 
+### Using the global command
+
+```shell
+vscode-ext <command> [options]
+```
+
+### Using npm start (without global installation)
+
+```shell
+npm start -- <command> [options]
+```
+
+Note: The `--` is required to pass arguments to the script.
+
+Examples:
+```shell
+npm start -- export my-extensions.json --exact
+npm start -- import my-extensions.json
+npm start -- list
+```
+
+### Available Commands
+
+- `export [filename] [--exact] [--dry-run] [--quiet]` - Export extensions to a JSON file
+- `import <filename> [--dry-run] [--quiet]` - Import extensions from a JSON file
+- `list [--quiet]` - List currently installed extensions
+
+### Options
+
+- `--exact` - Include version numbers and disabled status in export
+- `--dry-run` - Show what would be done without making changes
+- `--quiet` - Reduce output verbosity
+
 ### Exporting extensions
 
 Note: All exports go to the `output/` directory.
 
-If the file **already exists,** you’ll be prompted before overwriting.
+If the file **already exists,** you'll be prompted before overwriting.
 
 #### Basic (just extension IDs)
 
@@ -31,6 +64,12 @@ Running:
 
 ```shell
 vscode-ext export my-extensions.json
+```
+
+Or with npm start:
+
+```shell
+npm start -- export my-extensions.json
 ```
 
 Produces:
@@ -49,6 +88,12 @@ Running:
 
 ```
 vscode-ext export my-extensions.json --exact
+```
+
+Or with npm start:
+
+```shell
+npm start -- export my-extensions.json --exact
 ```
 
 Produces:
@@ -74,4 +119,22 @@ Produces:
 vscode-ext import my-extensions.json
 ```
 
+Or with npm start:
+
+```shell
+npm start -- import my-extensions.json
+```
+
 Note: file must exist in the `output/` directory
+
+### Configuration
+
+You can create a configuration file at `~/.vscode-ext-config.json` with default options:
+
+```json
+{
+  "exact": true,
+  "quiet": false,
+  "dryRun": false
+}
+```
