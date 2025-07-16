@@ -1,9 +1,12 @@
-#!/usr/bin/env node
+// Converted to TypeScript
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
+import readline from "readline";
+import { fileURLToPath } from 'url';
 
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
-const readline = require("readline");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const OUTPUT_DIR = path.join(__dirname, "output");
 
@@ -11,10 +14,12 @@ const COMMANDS = {
   EXPORT: "export",
   IMPORT: "import",
   LIST: "list"
-};
+} as const;
+
+type Command = typeof COMMANDS[keyof typeof COMMANDS];
 
 /** Utility - Yes/No */
-function promptYesNo(question) {
+function promptYesNo(question: string): Promise<boolean> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
@@ -28,7 +33,7 @@ function promptYesNo(question) {
 }
 
 /** Utility - Filename validation */
-function validateFilename(filename) {
+function validateFilename(filename: string): string {
   // Basic validation to prevent directory traversal
   if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
     console.error("❌ Invalid filename");
@@ -38,13 +43,13 @@ function validateFilename(filename) {
 }
 
 /** Utility - Basic logger */
-function log(message, quiet) {
+function log(message: string, quiet?: boolean): void {
   if (!quiet) {
     console.log(message);
   }
 }
 
-async function exportExtensions(filename, quiet = false, dryRun = false) {
+async function exportExtensions(filename: string, quiet = false, dryRun = false): Promise<void> {
   const filePath = path.join(OUTPUT_DIR, filename);
 
   if (!fs.existsSync(OUTPUT_DIR)) {
@@ -63,7 +68,7 @@ async function exportExtensions(filename, quiet = false, dryRun = false) {
     }
   }
 
-  let raw;
+  let raw: string[];
 
   try {
     raw = execSync("code --list-extensions --show-versions", { encoding: "utf-8" })
@@ -73,7 +78,7 @@ async function exportExtensions(filename, quiet = false, dryRun = false) {
         const [id, version] = line.split("@");
         return `${id}@${version}`;
       });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Failed to list extensions. Is VS Code installed and in your PATH?");
     console.error(error.message);
     process.exit(1);
@@ -87,7 +92,7 @@ async function exportExtensions(filename, quiet = false, dryRun = false) {
   }
 }
 
-function installExtension(ext, quiet = false, dryRun = false) {
+function installExtension(ext: string, quiet = false, dryRun = false): void {
   // ext is always in the form id@version
   const [id, version] = ext.split("@");
 
@@ -104,15 +109,15 @@ function installExtension(ext, quiet = false, dryRun = false) {
   }
 }
 
-function installExtensionAsync(ext, quiet = false, dryRun = false) {
+function installExtensionAsync(ext: string, quiet = false, dryRun = false): Promise<void> {
   return new Promise((resolve) => {
     installExtension(ext, quiet, dryRun);
     resolve();
   });
 }
 
-async function importExtensionsWithConcurrency(extensions, concurrency = 3, quiet = false, dryRun = false) {
-  const chunks = [];
+async function importExtensionsWithConcurrency(extensions: string[], concurrency = 3, quiet = false, dryRun = false): Promise<void> {
+  const chunks: string[][] = [];
   for (let i = 0; i < extensions.length; i += concurrency) {
     chunks.push(extensions.slice(i, i + concurrency));
   }
@@ -129,7 +134,7 @@ async function importExtensionsWithConcurrency(extensions, concurrency = 3, quie
   }
 }
 
-async function importExtensions(filename, quiet = false, dryRun = false) {
+async function importExtensions(filename: string, quiet = false, dryRun = false): Promise<void> {
   const filePath = path.join(OUTPUT_DIR, filename);
 
   if (!fs.existsSync(filePath)) {
@@ -138,7 +143,7 @@ async function importExtensions(filename, quiet = false, dryRun = false) {
   }
 
   const raw = fs.readFileSync(filePath, "utf-8");
-  let extensions;
+  let extensions: string[];
 
   try {
     extensions = JSON.parse(raw);
@@ -151,7 +156,7 @@ async function importExtensions(filename, quiet = false, dryRun = false) {
   log("✅ Import complete", quiet);
 }
 
-function listExtensions(quiet = false) {
+function listExtensions(quiet = false): void {
   try {
     // Get extensions with versions
     const extensionsWithVersions = execSync("code --list-extensions --show-versions", { encoding: "utf-8" })
@@ -167,15 +172,14 @@ function listExtensions(quiet = false) {
       log(`- ${ext.id}@${ext.version}`, quiet);
     });
     log(`Total: ${extensionsWithVersions.length} extensions`, quiet);
-
   } catch (error) {
     console.error("❌ Failed to list extensions");
     process.exit(1);
   }
 }
 
-function loadConfig() {
-  const configPath = path.join(process.env.HOME || process.env.USERPROFILE, '.vscode-ext-config.json');
+function loadConfig(): Record<string, any> {
+  const configPath = path.join(process.env.HOME || process.env.USERPROFILE || '', '.vscode-ext-config.json');
 
   if (fs.existsSync(configPath)) {
     try {
@@ -187,7 +191,7 @@ function loadConfig() {
   return {};
 }
 
-function showHelp() {
+function showHelp(): void {
   console.log("VS Code Extension Manager");
   console.log("=======================\n");
   console.log("Commands:");
@@ -201,7 +205,7 @@ function showHelp() {
 
 (async () => {
   const config = loadConfig();
-  const cmd = process.argv[2];
+  const cmd = process.argv[2] as Command;
   const filename = process.argv[3];
   const quiet = process.argv.includes("--quiet") || config.quiet;
   const dryRun = process.argv.includes("--dry-run") || config.dryRun;
@@ -221,4 +225,4 @@ function showHelp() {
     showHelp();
     process.exit(1);
   }
-})();
+})(); 
