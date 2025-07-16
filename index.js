@@ -44,7 +44,7 @@ function log(message, quiet) {
   }
 }
 
-async function exportExtensions(filename, exact = false, quiet = false, dryRun = false) {
+async function exportExtensions(filename, quiet = false, dryRun = false) {
   const filePath = path.join(OUTPUT_DIR, filename);
 
   if (!fs.existsSync(OUTPUT_DIR)) {
@@ -71,7 +71,7 @@ async function exportExtensions(filename, exact = false, quiet = false, dryRun =
       .filter(Boolean)
       .map(line => {
         const [id, version] = line.split("@");
-        return { id, version };
+        return `${id}@${version}`;
       });
   } catch (error) {
     console.error("❌ Failed to list extensions. Is VS Code installed and in your PATH?");
@@ -79,55 +79,28 @@ async function exportExtensions(filename, exact = false, quiet = false, dryRun =
     process.exit(1);
   }
 
-  const disabledRaw = execSync("code --list-extensions --disabled", { encoding: "utf-8" })
-    .split("\n")
-    .filter(Boolean);
-  const disabledSet = new Set(disabledRaw);
-
-  const final = exact
-    ? raw.map(ext => ({
-      id: ext.id,
-      version: ext.version,
-      disabled: disabledSet.has(ext.id)
-    }))
-    : raw.map(ext => ext.id);
-
   if (dryRun) {
     log(`[DRY RUN] Would export ${raw.length} extensions to ${filePath}`, quiet);
   } else {
-    fs.writeFileSync(filePath, JSON.stringify(final, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(raw, null, 2));
     log(`✅ Exported ${raw.length} extensions to ${filePath}`, quiet);
   }
 }
 
 function installExtension(ext, quiet = false, dryRun = false) {
-  const id = typeof ext === "string" ? ext : ext.id;
-  const version = typeof ext === "string" ? null : ext.version;
-  const disabled = typeof ext === "string" ? false : ext.disabled;
+  // ext is always in the form id@version
+  const [id, version] = ext.split("@");
 
   try {
     if (dryRun) {
-      log(`[DRY RUN] Would install ${id}${version ? `@${version}` : ''}`, quiet);
-      if (disabled) {
-        log(`[DRY RUN] Would disable ${id}`, quiet);
-      }
+      log(`[DRY RUN] Would install ${id}@${version}`, quiet);
       return;
     }
 
-    if (version) {
-      log(`Installing ${id}@${version}...`, quiet);
-      execSync(`code --install-extension ${id}@${version}`, { stdio: "inherit" });
-    } else {
-      log(`Installing ${id}...`, quiet);
-      execSync(`code --install-extension ${id}`, { stdio: "inherit" });
-    }
-
-    if (disabled) {
-      log(`🚫 Disabling ${id}...`, quiet);
-      execSync(`code --disable-extension ${id}`, { stdio: "inherit" });
-    }
+    log(`Installing ${id}@${version}...`, quiet);
+    execSync(`code --install-extension ${id}@${version}`, { stdio: "inherit" });
   } catch (err) {
-    console.warn(`⚠️ Failed to install ${id}`);
+    console.warn(`⚠️ Failed to install ${id}@${version}`);
   }
 }
 
@@ -189,18 +162,12 @@ function listExtensions(quiet = false) {
         return { id, version };
       });
 
-    // Get disabled extensions
-    const disabledRaw = execSync("code --list-extensions --disabled", { encoding: "utf-8" })
-      .split("\n")
-      .filter(Boolean);
-    const disabledSet = new Set(disabledRaw);
-
     log("📋 List installed extensions:", quiet);
     extensionsWithVersions.forEach(ext => {
-      const disabled = disabledSet.has(ext.id) ? " [DISABLED]" : "";
-      log(`- ${ext.id}@${ext.version}${disabled}`, quiet);
+      log(`- ${ext.id}@${ext.version}`, quiet);
     });
     log(`Total: ${extensionsWithVersions.length} extensions`, quiet);
+
   } catch (error) {
     console.error("❌ Failed to list extensions");
     process.exit(1);
@@ -224,11 +191,10 @@ function showHelp() {
   console.log("VS Code Extension Manager");
   console.log("=======================\n");
   console.log("Commands:");
-  console.log("  export [filename] [--exact]  Export extensions to a JSON file");
-  console.log("  import <filename>            Import extensions from a JSON file");
-  console.log("  list                         List currently installed extensions with versions");
+  console.log("  export [filename]         Export extensions to a JSON file (id@version format)");
+  console.log("  import <filename>         Import extensions from a JSON file (id@version format)");
+  console.log("  list                      List currently installed extensions with versions");
   console.log("\nOptions:");
-  console.log("  --exact    Include version numbers and disabled status in export");
   console.log("  --dry-run  Show what would be done without making changes");
   console.log("  --quiet    Reduce output verbosity");
 }
@@ -237,13 +203,12 @@ function showHelp() {
   const config = loadConfig();
   const cmd = process.argv[2];
   const filename = process.argv[3];
-  const exact = process.argv.includes("--exact") || config.exact;
   const quiet = process.argv.includes("--quiet") || config.quiet;
   const dryRun = process.argv.includes("--dry-run") || config.dryRun;
 
   if (cmd === COMMANDS.EXPORT) {
     const name = validateFilename(filename || `vscode-extensions-${Date.now()}.json`);
-    await exportExtensions(name, exact, quiet, dryRun);
+    await exportExtensions(name, quiet, dryRun);
   } else if (cmd === COMMANDS.IMPORT) {
     if (!filename) {
       console.error("❌ You must specify a file to import (e.g. vscode-ext import my.json)");

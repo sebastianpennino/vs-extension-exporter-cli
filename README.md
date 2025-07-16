@@ -1,10 +1,10 @@
 # VS Code extension import/export
-Export or import vs-code extensions using this CLI.
+Export or import VS Code extensions using this CLI.
 
 Cross-platform: works on macOS, Windows, and Linux.
 
 ## Pre
-Make sure the `code` (VS code) CLI is available:
+Make sure the `code` (VS Code) CLI is available:
 1. Open VSCode
 2. Run command palette: 
   - Shell Command: `Install 'code' command in PATH`
@@ -35,20 +35,19 @@ Note: The `--` is required to pass arguments to the script.
 
 Examples:
 ```shell
-npm start -- export my-extensions.json --exact
+npm start -- export my-extensions.json
 npm start -- import my-extensions.json
 npm start -- list
 ```
 
 ### Available Commands
 
-- `export [filename] [--exact] [--dry-run] [--quiet]` - Export extensions to a JSON file
+- `export [filename] [--dry-run] [--quiet]` - Export extensions to a JSON file
 - `import <filename> [--dry-run] [--quiet]` - Import extensions from a JSON file
 - `list [--quiet]` - List currently installed extensions
 
 ### Options
 
-- `--exact` - Include version numbers and disabled status in export
 - `--dry-run` - Show what would be done without making changes
 - `--quiet` - Reduce output verbosity
 
@@ -58,7 +57,7 @@ Note: All exports go to the `output/` directory.
 
 If the file **already exists,** you'll be prompted before overwriting.
 
-#### Basic (just extension IDs)
+#### Export format (always includes version)
 
 Running:
 
@@ -76,40 +75,9 @@ Produces:
 
 ```json
 [
-  "esbenp.prettier-vscode",
-  "ms-python.python",
-  "dbaeumer.vscode-eslint"
-]
-```
-
-#### Verbose (includes version and disabled status)
-
-Running:
-
-```
-vscode-ext export my-extensions.json --exact
-```
-
-Or with npm start:
-
-```shell
-npm start -- export my-extensions.json --exact
-```
-
-Produces:
-
-```json
-[
-  {
-    "id": "esbenp.prettier-vscode",
-    "version": "10.2.0",
-    "disabled": false
-  },
-  {
-    "id": "eamodio.gitlens",
-    "version": "14.3.0",
-    "disabled": true
-  }
+  "esbenp.prettier-vscode@10.2.0",
+  "ms-python.python@2024.6.0",
+  "dbaeumer.vscode-eslint@2.4.0"
 ]
 ```
 
@@ -125,7 +93,7 @@ Or with npm start:
 npm start -- import my-extensions.json
 ```
 
-Note: file must exist in the `output/` directory
+Note: file must exist in the `output/` directory and must be in the format above (`id@version` per line).
 
 ### Configuration
 
@@ -133,7 +101,6 @@ You can create a configuration file at `~/.vscode-ext-config.json` with default 
 
 ```json
 {
-  "exact": true,
   "quiet": false,
   "dryRun": false
 }
