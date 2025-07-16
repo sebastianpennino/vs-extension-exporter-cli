@@ -143,9 +143,9 @@ async function importExtensionsWithConcurrency(extensions, concurrency = 3, quie
   for (let i = 0; i < extensions.length; i += concurrency) {
     chunks.push(extensions.slice(i, i + concurrency));
   }
-  
+
   log(`[<] Importing ${extensions.length} extensions...`, quiet);
-  
+
   let completed = 0;
   for (const chunk of chunks) {
     await Promise.all(chunk.map(ext => {
@@ -180,13 +180,27 @@ async function importExtensions(filename, quiet = false, dryRun = false) {
 
 function listExtensions(quiet = false) {
   try {
-    const extensions = execSync("code --list-extensions", { encoding: "utf-8" })
+    // Get extensions with versions
+    const extensionsWithVersions = execSync("code --list-extensions --show-versions", { encoding: "utf-8" })
+      .split("\n")
+      .filter(Boolean)
+      .map(line => {
+        const [id, version] = line.split("@");
+        return { id, version };
+      });
+
+    // Get disabled extensions
+    const disabledRaw = execSync("code --list-extensions --disabled", { encoding: "utf-8" })
       .split("\n")
       .filter(Boolean);
-    
+    const disabledSet = new Set(disabledRaw);
+
     log("📋 List installed extensions:", quiet);
-    extensions.forEach(ext => log(`- ${ext}`, quiet));
-    log(`Total: ${extensions.length} extensions`, quiet);
+    extensionsWithVersions.forEach(ext => {
+      const disabled = disabledSet.has(ext.id) ? " [DISABLED]" : "";
+      log(`- ${ext.id}@${ext.version}${disabled}`, quiet);
+    });
+    log(`Total: ${extensionsWithVersions.length} extensions`, quiet);
   } catch (error) {
     console.error("❌ Failed to list extensions");
     process.exit(1);
@@ -212,9 +226,9 @@ function showHelp() {
   console.log("Commands:");
   console.log("  export [filename] [--exact]  Export extensions to a JSON file");
   console.log("  import <filename>            Import extensions from a JSON file");
-  console.log("  list                         List currently installed extensions");
+  console.log("  list                         List currently installed extensions with versions");
   console.log("\nOptions:");
-  console.log("  --exact    Include version numbers and disabled status");
+  console.log("  --exact    Include version numbers and disabled status in export");
   console.log("  --dry-run  Show what would be done without making changes");
   console.log("  --quiet    Reduce output verbosity");
 }
