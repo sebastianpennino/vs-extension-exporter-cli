@@ -1,0 +1,29 @@
+{
+  "name": "vs-extension-exporter-cli",
+  "version": "1.0.0",
+  "description": "Export and/or import vs-code extensions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sebastianpennino/vs-extension-exporter-cli.git"
+  },
+  "keywords": [
+    "vs-code",
+    "code",
+    "vscode",
+    "export",
+    "import",
+    "extension",
+    "extensions",
+    "cli"
+  ],
+  "author": "sebastianpennino",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sebastianpennino/vs-extension-exporter-cli/issues"
+  },
+  "homepage": "https://github.com/sebastianpennino/vs-extension-exporter-cli#readme"
+}
