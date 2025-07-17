@@ -1,7 +1,5 @@
 # VS Code extension import/export
-Export or import VS Code extensions using this CLI.
-
-Cross-platform: works on macOS, Windows, and Linux.
+Export or import VS Code extensions using this command line interface
 
 ## Prerequisites
 Make sure the `code` (VS Code) CLI is available:
@@ -9,8 +7,6 @@ Make sure the `code` (VS Code) CLI is available:
 2. Run command palette: 
   - Shell Command: `Install 'code' command in PATH`
 3. Confirm with `code --version` in your terminal
-
-**Requires Node.js v20.6.0 or later for native TypeScript support.**
 
 See: [Running TypeScript Natively in Node.js](https://nodejs.org/en/learn/typescript/run-natively)
 
@@ -109,7 +105,3 @@ You can create a configuration file at `~/.vscode-ext-config.json` with default 
   "dryRun": false
 }
 ```
-
----
-
-**Note:** No transpilation step is required for Node.js 20.6.0+; you can run TypeScript files directly. See [Node.js TypeScript Native Support](https://nodejs.org/en/learn/typescript/run-natively) for details.
