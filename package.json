@@ -1,11 +1,14 @@
 {
   "name": "vs-extension-exporter-cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Export and/or import vs-code extensions",
   "main": "index.ts",
   "type": "module",
   "scripts": {
     "start": "node index.ts",
+    "list": "npm start -- list",
+    "import": "npm start -- import output/my-extensions.json",
+    "export": "npm start -- export my-extensions.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {

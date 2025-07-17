@@ -34,9 +34,8 @@ function promptYesNo(question: string): Promise<boolean> {
 
 /** Utility - Filename validation */
 function validateFilename(filename: string): string {
-  // Basic validation to prevent directory traversal
-  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
-    console.error("❌ Invalid filename");
+  if (filename.includes("..") || filename.includes("\\")) {
+    console.error(`❌ Invalid filename or path "${filename}"`);
     process.exit(1);
   }
   return filename;
@@ -135,7 +134,7 @@ async function importExtensionsWithConcurrency(extensions: string[], concurrency
 }
 
 async function importExtensions(filename: string, quiet = false, dryRun = false): Promise<void> {
-  const filePath = path.join(OUTPUT_DIR, filename);
+  const filePath = filename;
 
   if (!fs.existsSync(filePath)) {
     console.error(`❌ File not found: ${filePath}`);
